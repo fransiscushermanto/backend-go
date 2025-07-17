@@ -1,0 +1,25 @@
+# Ignore Git-related files
+.git/
+.gitignore
+
+# Ignore Go build cache and modules cache
+# These are temporary and should not be copied/mounted
+__debug_bin/
+*.test
+*.prof
+tmp/ # Exclude tmp directory where air builds (important for performance)
+go.sum # Often ignored if managed by go mod tidy outside build context, but safer to keep if copy happens after.
+
+# Ignore IDE files
+.idea/
+.vscode/
+
+# Ignore vendor directory (if present and not explicitly needed)
+vendor/
+
+# Ignore OS-specific files
+.DS_Store
+Thumbs.db
+
+# Ignore the compiled application binary itself (as it's created by Dockerfile)
+/api # Match the -o name from your Dockerfile build command

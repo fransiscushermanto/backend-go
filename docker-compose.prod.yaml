@@ -1,0 +1,7 @@
+services:
+  api:
+    build:
+      context: .
+      target: production
+    ports:
+      - "${APP_PORT}:${APP_PORT}"
