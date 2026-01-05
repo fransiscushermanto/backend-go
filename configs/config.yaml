@@ -1,0 +1,5 @@
+port: 8080
+database_url: "postgres://postgres:password@localhost:5432/fransiscushermanto_db?sslmode=disable"
+env: development
+shutdown_timeout: 10
+allowed_origins:

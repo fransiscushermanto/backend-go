@@ -1,0 +1,21 @@
+services:
+  api:
+    build:
+      context: .
+      target: development
+    ports:
+      - "${APP_PORT}:${APP_PORT}"
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+    command: >
+      sh -c "
+        echo '=== Setting up environment variables ===' &&
+        export PRIVATE_KEY=\"$$(cat /app/private_key.pem 2>/dev/null || echo '')\" &&
+        export PUBLIC_KEY=\"$$(cat /app/public_key.pem 2>/dev/null || echo '')\" &&
+        echo \"PRIVATE_KEY length: $${#PRIVATE_KEY}\" &&
+        echo \"PUBLIC_KEY length: $${#PUBLIC_KEY}\" &&
+        echo '=== Starting air ===' &&
+        air
+      "

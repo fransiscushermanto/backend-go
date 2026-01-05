@@ -1,0 +1,33 @@
+version: "3.8"
+
+services:
+  db:
+    container_name: backend_db
+    image: postgres:14-alpine
+    ports:
+      - "7002:5432"
+    environment:
+      - POSTGRES_DB=fransiscushermanto_db
+      - POSTGRES_USER=fransiscushermanto
+      - POSTGRES_PASSWORD=1234
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U fransiscushermanto -d fransiscushermanto_db",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+  api:
+    container_name: backend_api
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: on-failure
+
+volumes:
+  db_data:

@@ -1,0 +1,16 @@
+root = "." 
+tmp_dir = "tmp"
+
+[build]
+cmd = "GO111MODULE=on go build -o ./tmp/api ./cmd/api"
+full_bin = "./tmp/api"
+exclude_dir = ["tmp", "vendor", ".git", ".idea", "migrations", "scripts"]
+log = "air_build.log"
+
+[run]
+cmd = "./tmp/api" # Execute the newly built binary
+
+[watch]
+dir = ["."]
+exclude_regex = ["_test.go", ".git", ".idea", "tmp", "vendor"]
+follow_symlink = true
