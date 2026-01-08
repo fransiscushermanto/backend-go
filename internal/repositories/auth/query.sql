@@ -20,5 +20,14 @@ ORDER BY created_at DESC;
 
 -- name: RevokeRefreshTokens :exec
 UPDATE core.refresh_tokens 
-SET is_active = false 
-WHERE app_id = $1 AND user_id = $2 AND jti = ANY(@jtis::text[]);
+SET is_active = false, updated_at = now()
+WHERE app_id = $1 AND user_id = $2 AND is_active = true;
+
+-- name: StoreResetPasswordToken :exec
+INSERT INTO core.reset_password_tokens (jti, user_id, app_id, token, expires_at)
+VALUES ($1, $2, $3, $4, $5);
+
+-- name: RevokeResetPasswordToken :exec
+UPDATE core.reset_password_tokens
+SET is_active = false, updated_at = now()
+WHERE app_id = $1 AND user_id = $2 AND is_active = true;

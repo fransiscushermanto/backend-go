@@ -79,8 +79,8 @@ func (r *UserRepository) GetUserAuthenticationByProvider(ctx context.Context, ap
 		Provider:       models.AuthProvider(dbUserAuth.Provider),
 		ProviderUserID: dbUserAuth.ProviderUserID,
 		Password:       *dbUserAuth.Password,
-		CreatedAt:      dbUserAuth.CreatedAt.Time,
-		UpdatedAt:      dbUserAuth.UpdatedAt.Time,
+		CreatedAt:      dbUserAuth.CreatedAt,
+		UpdatedAt:      dbUserAuth.UpdatedAt,
 	}
 
 	if err != nil {
@@ -186,8 +186,8 @@ func (r *UserRepository) GetUserByEmail(ctx context.Context, appID uuid.UUID, em
 		Email:           dbUser.Email,
 		IsEmailVerified: dbUser.IsEmailVerified,
 		EmailVerifiedAt: &dbUser.EmailVerifiedAt.Time,
-		CreatedAt:       dbUser.CreatedAt.Time,
-		UpdatedAt:       dbUser.UpdatedAt.Time,
+		CreatedAt:       dbUser.CreatedAt,
+		UpdatedAt:       dbUser.UpdatedAt,
 	}
 
 	if err != nil {

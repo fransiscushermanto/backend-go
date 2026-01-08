@@ -1,1 +1,1 @@
-DROP TABLE IF EXISTS core.user_auth_providers;
+DROP TABLE core.user_auth_providers;

@@ -1,5 +1,5 @@
 CREATE TABLE
-    IF NOT EXISTS core.user_auth_providers (
+    core.user_auth_providers (
         user_id UUID NOT NULL,
         app_id UUID NOT NULL,
         -- This field is used to identify the authentication provider

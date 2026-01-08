@@ -1,3 +1,3 @@
-DROP TABLE IF EXISTS core.refresh_tokens;
+DROP TABLE core.refresh_tokens;
 
-DROP TABLE IF EXISTS core.blacklist_tokens;
+DROP TABLE core.blacklist_tokens;

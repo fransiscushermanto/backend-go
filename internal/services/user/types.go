@@ -22,3 +22,8 @@ type UserService struct {
 	repo       UserRepository
 	appService *app.AppService
 }
+
+type UserIdentifier struct {
+	ID    *uuid.UUID
+	Email *string
+}

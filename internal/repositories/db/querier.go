@@ -24,9 +24,11 @@ type Querier interface {
 	LockAppForUpdate(ctx context.Context, id uuid.UUID) (uuid.UUID, error)
 	RevokeActiveAppApiKeys(ctx context.Context, arg RevokeActiveAppApiKeysParams) (int64, error)
 	RevokeRefreshTokens(ctx context.Context, arg RevokeRefreshTokensParams) error
+	RevokeResetPasswordToken(ctx context.Context, arg RevokeResetPasswordTokenParams) error
 	StoreApp(ctx context.Context, arg StoreAppParams) error
 	StoreAppApiKey(ctx context.Context, arg StoreAppApiKeyParams) error
 	StoreRefreshToken(ctx context.Context, arg StoreRefreshTokenParams) error
+	StoreResetPasswordToken(ctx context.Context, arg StoreResetPasswordTokenParams) error
 	StoreUser(ctx context.Context, arg StoreUserParams) error
 	StoreUserAuthProvider(ctx context.Context, arg StoreUserAuthProviderParams) error
 }

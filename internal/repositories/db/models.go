@@ -12,39 +12,54 @@ import (
 )
 
 type CoreApp struct {
-	ID        uuid.UUID          `json:"id"`
-	Name      []byte             `json:"name"`
-	CreatedAt pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
+	ID        uuid.UUID `json:"id"`
+	Name      []byte    `json:"name"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 type CoreAppApiKey struct {
 	ID         uuid.UUID          `json:"id"`
 	AppID      uuid.UUID          `json:"app_id"`
 	KeyHash    string             `json:"key_hash"`
-	CreatedAt  pgtype.Timestamptz `json:"created_at"`
+	CreatedAt  time.Time          `json:"created_at"`
 	IsActive   bool               `json:"is_active"`
 	RevokedAt  pgtype.Timestamptz `json:"revoked_at"`
 	LastUsedAt pgtype.Timestamptz `json:"last_used_at"`
+	UpdatedAt  time.Time          `json:"updated_at"`
 }
 
 type CoreBlacklistToken struct {
-	Jti           string             `json:"jti"`
-	UserID        uuid.UUID          `json:"user_id"`
-	AppID         uuid.UUID          `json:"app_id"`
-	Token         string             `json:"token"`
-	BlacklistedAt pgtype.Timestamptz `json:"blacklisted_at"`
-	Reason        *string            `json:"reason"`
+	Jti           string    `json:"jti"`
+	Token         string    `json:"token"`
+	BlacklistedAt time.Time `json:"blacklisted_at"`
+	ExpiresAt     time.Time `json:"expires_at"`
+	Reason        *string   `json:"reason"`
+	UpdatedAt     time.Time `json:"updated_at"`
 }
 
 type CoreRefreshToken struct {
-	Jti       string             `json:"jti"`
-	UserID    uuid.UUID          `json:"user_id"`
-	AppID     uuid.UUID          `json:"app_id"`
-	Token     string             `json:"token"`
-	IsActive  bool               `json:"is_active"`
-	CreatedAt pgtype.Timestamptz `json:"created_at"`
-	ExpiresAt time.Time          `json:"expires_at"`
+	Jti        string    `json:"jti"`
+	UserID     uuid.UUID `json:"user_id"`
+	AppID      uuid.UUID `json:"app_id"`
+	DeviceID   string    `json:"device_id"`
+	DeviceName *string   `json:"device_name"`
+	Token      string    `json:"token"`
+	IsActive   bool      `json:"is_active"`
+	CreatedAt  time.Time `json:"created_at"`
+	ExpiresAt  time.Time `json:"expires_at"`
+	UpdatedAt  time.Time `json:"updated_at"`
+}
+
+type CoreResetPasswordToken struct {
+	Jti       string    `json:"jti"`
+	UserID    uuid.UUID `json:"user_id"`
+	AppID     uuid.UUID `json:"app_id"`
+	Token     string    `json:"token"`
+	IsActive  bool      `json:"is_active"`
+	CreatedAt time.Time `json:"created_at"`
+	ExpiresAt time.Time `json:"expires_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 type CoreUser struct {
@@ -54,16 +69,16 @@ type CoreUser struct {
 	Email           string             `json:"email"`
 	IsEmailVerified bool               `json:"is_email_verified"`
 	EmailVerifiedAt pgtype.Timestamptz `json:"email_verified_at"`
-	CreatedAt       pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt       pgtype.Timestamptz `json:"updated_at"`
+	CreatedAt       time.Time          `json:"created_at"`
+	UpdatedAt       time.Time          `json:"updated_at"`
 }
 
 type CoreUserAuthProvider struct {
-	UserID         uuid.UUID          `json:"user_id"`
-	AppID          uuid.UUID          `json:"app_id"`
-	Provider       string             `json:"provider"`
-	ProviderUserID *string            `json:"provider_user_id"`
-	Password       *string            `json:"password"`
-	CreatedAt      pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt      pgtype.Timestamptz `json:"updated_at"`
+	UserID         uuid.UUID `json:"user_id"`
+	AppID          uuid.UUID `json:"app_id"`
+	Provider       string    `json:"provider"`
+	ProviderUserID *string   `json:"provider_user_id"`
+	Password       *string   `json:"password"`
+	CreatedAt      time.Time `json:"created_at"`
+	UpdatedAt      time.Time `json:"updated_at"`
 }

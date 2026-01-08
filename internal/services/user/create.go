@@ -13,16 +13,6 @@ import (
 func (s *UserService) CreateUser(ctx context.Context, req *models.CreateUserRequest) (*models.User, error) {
 	createUserLog := log("CreateUser")
 
-	if req.Email == "" || req.Name == "" || req.AppID == uuid.Nil || req.Provider == "" {
-		createUserLog.Error().Msg("provider, appID, email, name may not be empty")
-		return nil, utils.ErrBadRequest
-	}
-
-	if req.Provider != models.AuthProviderLocal {
-		createUserLog.Error().Msg("currently only support 'local' provider")
-		return nil, utils.ErrBadRequest
-	}
-
 	existingUser, err := s.repo.GetUserByEmail(ctx, req.AppID, req.Email)
 	if err != nil {
 		createUserLog.Error().Err(err).Msg("Failed to check existing user by email")

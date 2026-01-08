@@ -14,7 +14,7 @@ VALUES ($1, $2, $3, $4);
 
 -- name: RevokeActiveAppApiKeys :execrows
 UPDATE core.app_api_keys 
-SET is_active = false, revoked_at = $2 
+SET is_active = false, revoked_at = $2, updated_at = now() 
 WHERE app_id = $1 AND is_active = true;
 
 -- name: LockAppForUpdate :one

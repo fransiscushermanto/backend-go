@@ -92,8 +92,17 @@ func (c *Controller) Login(w http.ResponseWriter, r *http.Request) {
 	if loginWithEmailReq.Provider == models.AuthProviderLocal {
 		loginWithEmailReq.AppID = appID
 
-		if err := mValidator.Struct(loginWithEmailReq); err != nil {
+		if err := utils.ValidateBodyRequest(loginWithEmailReq); err != nil {
 			loginLog.Error().Err(err).Msg("Local Auth Missing Payload")
+			utils.RespondWithError(w, models.ApiError{
+				StatusCode: http.StatusBadRequest,
+				Message:    utils.StringPointer("Invalid request payload"),
+			})
+			return
+		}
+
+		if err := mValidator.Struct(loginWithEmailReq); err != nil {
+			loginLog.Error().Err(err).Msg("Local Auth Fields Invalid Value")
 			handleValidationError(w, err)
 			return
 		}
@@ -134,21 +143,53 @@ func (c *Controller) Login(w http.ResponseWriter, r *http.Request) {
 	} else if loginWithPasswordlessReq.Provider == models.AuthProviderPasswordless {
 		loginWithPasswordlessReq.AppID = appID
 
-		if err := mValidator.Struct(loginWithPasswordlessReq); err != nil {
-			loginLog.Error().Err(err).Msg("Passwordless Auth Missing Payload")
-			handleValidationError(w, err)
-			return
-		}
+		// TODO: remove this check when implemented code for passwordless providers
+		loginLog.Error().Str("provider", string(loginWithPasswordlessReq.Provider)).Msg("Accessing not implemented provider")
+		utils.RespondWithError(w, models.ApiError{
+			StatusCode: http.StatusNotImplemented,
+		})
+
+		// TODO: uncomment this check when implemented code for passwordless providers
+		// if err := utils.ValidateBodyRequest(loginWithPasswordlessReq); err != nil {
+		// 	loginLog.Error().Err(err).Msg("Passwordless Auth Missing Payload")
+		// 	utils.RespondWithError(w, models.ApiError{
+		// 		StatusCode: http.StatusBadRequest,
+		// 		Message:    utils.StringPointer("Invalid request payload"),
+		// 	})
+		// 	return
+		// }
+
+		// if err := mValidator.Struct(loginWithPasswordlessReq); err != nil {
+		// 	loginLog.Error().Err(err).Msg("Passwordless Auth Fields Invalid Value")
+		// 	handleValidationError(w, err)
+		// 	return
+		// }
 
 	} else if isValidOtherAuthProvider(loginWithOtherProviderReq.Provider) {
 		loginWithOtherProviderReq.AppID = appID
 
-		// other than local and passwordless it's asume as other provider
-		if err := mValidator.Struct(loginWithOtherProviderReq); err != nil {
-			loginLog.Error().Err(err).Msg("Other Provider Auth  Missing Payload")
-			handleValidationError(w, err)
-			return
-		}
+		// TODO: remove this check when implemented code for other providers
+		loginLog.Error().Str("provider", string(loginWithOtherProviderReq.Provider)).Msg("Accessing not implemented provider")
+		utils.RespondWithError(w, models.ApiError{
+			StatusCode: http.StatusNotImplemented,
+		})
+
+		// TODO: uncomment this check when implemented code for other provider
+		// if err := utils.ValidateBodyRequest(loginWithOtherProviderReq); err != nil {
+		// 	loginLog.Error().Err(err).Msg("Other Provider Auth Missing Payload")
+		// 	utils.RespondWithError(w, models.ApiError{
+		// 		StatusCode: http.StatusBadRequest,
+		// 		Message:    utils.StringPointer("Invalid request payload"),
+		// 	})
+		// 	return
+		// }
+
+		// // other than local and passwordless it's asume as other provider
+		// if err := mValidator.Struct(loginWithOtherProviderReq); err != nil {
+		// 	loginLog.Error().Err(err).Msg("Other Provider Auth Fields Invalid Value")
+		// 	handleValidationError(w, err)
+		// 	return
+		// }
 
 	} else {
 		utils.RespondWithError(w, models.ApiError{

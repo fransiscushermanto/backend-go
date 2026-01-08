@@ -63,10 +63,11 @@ func RoutesV1(router chi.Router, options *RoutesOptions) {
 			})
 			authController := v1.NewAuthController(services.AuthService)
 
-			r.Group(func(rAuthGroup chi.Router) {
+			rProtected.Group(func(rAuthGroup chi.Router) {
 				rAuthGroup.Post("/register", authController.Register)
-				rAuthGroup.Post("/refresh", authController.Refresh)
+				rAuthGroup.Post("/refresh", authController.RefreshToken)
 				rAuthGroup.Post("/login", authController.Login)
+				rAuthGroup.Post("/forget-password", authController.ForgetPassword)
 			})
 
 			rProtected.Route("/apps", func(rApps chi.Router) {

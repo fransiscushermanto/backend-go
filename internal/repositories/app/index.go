@@ -199,8 +199,8 @@ func (r *AppRepository) GetAppById(ctx context.Context, id uuid.UUID) (*models.A
 	app := &models.App{
 		ID:        result.ID,
 		Name:      result.Name,
-		CreatedAt: result.CreatedAt.Time,
-		UpdatedAt: result.UpdatedAt.Time,
+		CreatedAt: result.CreatedAt,
+		UpdatedAt: result.UpdatedAt,
 	}
 
 	if err != nil {

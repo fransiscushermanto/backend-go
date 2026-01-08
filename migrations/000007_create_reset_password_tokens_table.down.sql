@@ -1,0 +1,1 @@
+DROP TABLE IF EXISTS core.reset_password_tokens;

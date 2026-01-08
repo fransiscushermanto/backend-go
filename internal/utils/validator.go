@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"reflect"
 	"strings"
 
 	"github.com/go-playground/validator/v10"
@@ -86,4 +87,152 @@ func ValidateAppAccess(ctx context.Context, appID *uuid.UUID) error {
 	}
 
 	return nil
+}
+
+func ValidateBodyRequest(req interface{}) error {
+	v := reflect.ValueOf(req)
+	t := reflect.TypeOf(req)
+
+	if v.Kind() == reflect.Ptr {
+		if v.IsNil() {
+			return ErrBadRequest
+		}
+
+		v = v.Elem()
+		t = t.Elem()
+	}
+
+	if v.Kind() != reflect.Struct {
+		return ErrBadRequest
+	}
+
+	for i := 0; i < v.NumField(); i++ {
+		field := v.Field(i)
+		fieldType := t.Field(i)
+
+		// Skip unexported fields
+		if !field.CanInterface() {
+			continue
+		}
+
+		// Get validate tag
+		validateTag := fieldType.Tag.Get("validate")
+		if validateTag == "" {
+			continue // No validation rules
+		}
+
+		// Check if this field should be validated for emptiness
+		shouldValidate, err := shouldValidateField(validateTag, v, t)
+		if err != nil {
+			return err
+		}
+
+		if !shouldValidate {
+			continue
+		}
+
+		switch field.Kind() {
+		case reflect.String:
+			if field.String() == "" {
+				return ErrBadRequest
+			}
+		case reflect.Ptr:
+			elem := field.Elem()
+			if (elem.Kind() == reflect.String && elem.String() == "") || field.IsNil() {
+				return ErrBadRequest
+			}
+		}
+
+	}
+
+	return nil
+}
+
+func shouldValidateField(validateTag string, structValue reflect.Value, structType reflect.Type) (bool, error) {
+	rules := strings.Split(validateTag, ",")
+
+	for _, rule := range rules {
+		rule = strings.TrimSpace(rule)
+
+		switch {
+		case rule == "required":
+			return true, nil
+
+		case strings.HasPrefix(rule, "required_unless="):
+			// Parse: required_unless=Provider local
+			condition := strings.TrimPrefix(rule, "required_unless=")
+			parts := strings.Split(condition, " ")
+			if len(parts) != 2 {
+				continue
+			}
+
+			fieldName := parts[0]
+			expectedValue := parts[1]
+
+			// Get the referenced field value
+			refField, err := getFieldByName(structValue, structType, fieldName)
+			if err != nil {
+				return false, err
+			}
+
+			// Check if condition is met (if true, don't validate)
+			if getFieldStringValue(refField) == expectedValue {
+				return false, nil // Don't validate because condition is met
+			}
+			return true, nil // Validate because condition is not met
+
+		case strings.HasPrefix(rule, "required_if="):
+			// Parse: required_if=Provider local
+			condition := strings.TrimPrefix(rule, "required_if=")
+			parts := strings.Split(condition, " ")
+			if len(parts) != 2 {
+				continue
+			}
+
+			fieldName := parts[0]
+			expectedValue := parts[1]
+
+			// Get the referenced field value
+			refField, err := getFieldByName(structValue, structType, fieldName)
+			if err != nil {
+				return false, err
+			}
+
+			// Check if condition is met (if true, validate)
+			if getFieldStringValue(refField) == expectedValue {
+				return true, nil // Validate because condition is met
+			}
+			return false, nil // Don't validate because condition is not met
+
+		case rule == "omitempty":
+			return false, nil // Don't validate empty values
+		}
+	}
+
+	return false, nil // Default: don't validate
+}
+
+func getFieldByName(structValue reflect.Value, structType reflect.Type, fieldName string) (reflect.Value, error) {
+	for i := 0; i < structValue.NumField(); i++ {
+		if structType.Field(i).Name == fieldName {
+			return structValue.Field(i), nil
+		}
+	}
+	return reflect.Value{}, fmt.Errorf("field %s not found", fieldName)
+}
+
+func getFieldStringValue(field reflect.Value) string {
+	switch field.Kind() {
+	case reflect.String:
+		return field.String()
+	case reflect.Ptr:
+		if field.IsNil() {
+			return ""
+		}
+		elem := field.Elem()
+		if elem.Kind() == reflect.String {
+			return elem.String()
+		}
+	}
+	return field.String() // Try to convert to string
 }

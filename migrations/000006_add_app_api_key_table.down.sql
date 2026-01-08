@@ -1,1 +1,1 @@
-DROP TABLE IF EXISTS core.app_api_keys;
+DROP TABLE core.app_api_keys;

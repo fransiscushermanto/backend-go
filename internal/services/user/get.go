@@ -42,17 +42,33 @@ func (s *UserService) GetUsers(ctx context.Context) ([]*models.User, error) {
 	return users, nil
 }
 
-func (s *UserService) GetUser(ctx context.Context, appID, id uuid.UUID) (*models.User, error) {
+func (s *UserService) GetUser(ctx context.Context, appID uuid.UUID, identifier UserIdentifier) (*models.User, error) {
+	var user *models.User
+
 	getUserLog := log("GetUser")
 
 	opCtx, cancel := utils.ContextWithTimeout(5 * time.Second)
 	defer cancel()
 
-	user, err := s.repo.GetAppUserByID(opCtx, appID, id)
+	if identifier.ID != nil {
+		dbUser, err := s.repo.GetAppUserByID(opCtx, appID, *identifier.ID)
+		if err != nil {
+			getUserLog.Error().Err(err).Msg("Failed to execute repository method GetAppUserByID")
+			return nil, fmt.Errorf("failed to get user from repository: %w", err)
+		}
 
-	if err != nil {
-		getUserLog.Error().Err(err).Msg("Failed to execute repository method GetAppUserByID")
-		return nil, fmt.Errorf("failed to get user from repository: %w", err)
+		user = dbUser
+
+	} else if identifier.Email != nil {
+		dbUser, err := s.repo.GetUserByEmail(opCtx, appID, *identifier.Email)
+		if err != nil {
+			getUserLog.Error().Err(err).Msg("Failed to execute repository method GetAppUserByID")
+			return nil, fmt.Errorf("failed to get user from repository: %w", err)
+		}
+
+		user = dbUser
+	} else {
+		getUserLog.Panic().Msg("You must provide at least one identifier either id or user")
 	}
 
 	if user == nil {

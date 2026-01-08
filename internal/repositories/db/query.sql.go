@@ -176,13 +176,13 @@ type GetRefreshTokenByJTIParams struct {
 }
 
 type GetRefreshTokenByJTIRow struct {
-	Jti       string             `json:"jti"`
-	UserID    uuid.UUID          `json:"user_id"`
-	AppID     uuid.UUID          `json:"app_id"`
-	Token     string             `json:"token"`
-	ExpiresAt time.Time          `json:"expires_at"`
-	IsActive  bool               `json:"is_active"`
-	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	Jti       string    `json:"jti"`
+	UserID    uuid.UUID `json:"user_id"`
+	AppID     uuid.UUID `json:"app_id"`
+	Token     string    `json:"token"`
+	ExpiresAt time.Time `json:"expires_at"`
+	IsActive  bool      `json:"is_active"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 func (q *Queries) GetRefreshTokenByJTI(ctx context.Context, arg GetRefreshTokenByJTIParams) (GetRefreshTokenByJTIRow, error) {
@@ -201,7 +201,7 @@ func (q *Queries) GetRefreshTokenByJTI(ctx context.Context, arg GetRefreshTokenB
 }
 
 const getUserActiveRefreshTokensByJTI = `-- name: GetUserActiveRefreshTokensByJTI :many
-SELECT jti, user_id, app_id, token, is_active, created_at, expires_at FROM core.refresh_tokens
+SELECT jti, user_id, app_id, device_id, device_name, token, is_active, created_at, expires_at, updated_at FROM core.refresh_tokens
 WHERE app_id = $1 AND jti = $2 AND is_active = true
 ORDER BY created_at DESC
 `
@@ -224,10 +224,13 @@ func (q *Queries) GetUserActiveRefreshTokensByJTI(ctx context.Context, arg GetUs
 			&i.Jti,
 			&i.UserID,
 			&i.AppID,
+			&i.DeviceID,
+			&i.DeviceName,
 			&i.Token,
 			&i.IsActive,
 			&i.CreatedAt,
 			&i.ExpiresAt,
+			&i.UpdatedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -240,7 +243,7 @@ func (q *Queries) GetUserActiveRefreshTokensByJTI(ctx context.Context, arg GetUs
 }
 
 const getUserActiveRefreshTokensByUserID = `-- name: GetUserActiveRefreshTokensByUserID :many
-SELECT jti, user_id, app_id, token, is_active, created_at, expires_at FROM core.refresh_tokens
+SELECT jti, user_id, app_id, device_id, device_name, token, is_active, created_at, expires_at, updated_at FROM core.refresh_tokens
 WHERE app_id = $1 AND user_id = $2 AND is_active = true
 ORDER BY created_at DESC
 `
@@ -263,10 +266,13 @@ func (q *Queries) GetUserActiveRefreshTokensByUserID(ctx context.Context, arg Ge
 			&i.Jti,
 			&i.UserID,
 			&i.AppID,
+			&i.DeviceID,
+			&i.DeviceName,
 			&i.Token,
 			&i.IsActive,
 			&i.CreatedAt,
 			&i.ExpiresAt,
+			&i.UpdatedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -344,7 +350,7 @@ func (q *Queries) LockAppForUpdate(ctx context.Context, id uuid.UUID) (uuid.UUID
 
 const revokeActiveAppApiKeys = `-- name: RevokeActiveAppApiKeys :execrows
 UPDATE core.app_api_keys 
-SET is_active = false, revoked_at = $2 
+SET is_active = false, revoked_at = $2, updated_at = now() 
 WHERE app_id = $1 AND is_active = true
 `
 
@@ -363,18 +369,33 @@ func (q *Queries) RevokeActiveAppApiKeys(ctx context.Context, arg RevokeActiveAp
 
 const revokeRefreshTokens = `-- name: RevokeRefreshTokens :exec
 UPDATE core.refresh_tokens 
-SET is_active = false 
-WHERE app_id = $1 AND user_id = $2 AND jti = ANY($3::text[])
+SET is_active = false, updated_at = now()
+WHERE app_id = $1 AND user_id = $2 AND is_active = true
 `
 
 type RevokeRefreshTokensParams struct {
 	AppID  uuid.UUID `json:"app_id"`
 	UserID uuid.UUID `json:"user_id"`
-	Jtis   []string  `json:"jtis"`
 }
 
 func (q *Queries) RevokeRefreshTokens(ctx context.Context, arg RevokeRefreshTokensParams) error {
-	_, err := q.db.Exec(ctx, revokeRefreshTokens, arg.AppID, arg.UserID, arg.Jtis)
+	_, err := q.db.Exec(ctx, revokeRefreshTokens, arg.AppID, arg.UserID)
+	return err
+}
+
+const revokeResetPasswordToken = `-- name: RevokeResetPasswordToken :exec
+UPDATE core.reset_password_tokens
+SET is_active = false, updated_at = now()
+WHERE app_id = $1 AND user_id = $2 AND is_active = true
+`
+
+type RevokeResetPasswordTokenParams struct {
+	AppID  uuid.UUID `json:"app_id"`
+	UserID uuid.UUID `json:"user_id"`
+}
+
+func (q *Queries) RevokeResetPasswordToken(ctx context.Context, arg RevokeResetPasswordTokenParams) error {
+	_, err := q.db.Exec(ctx, revokeResetPasswordToken, arg.AppID, arg.UserID)
 	return err
 }
 
@@ -437,6 +458,30 @@ func (q *Queries) StoreRefreshToken(ctx context.Context, arg StoreRefreshTokenPa
 		arg.Token,
 		arg.ExpiresAt,
 		arg.IsActive,
+	)
+	return err
+}
+
+const storeResetPasswordToken = `-- name: StoreResetPasswordToken :exec
+INSERT INTO core.reset_password_tokens (jti, user_id, app_id, token, expires_at)
+VALUES ($1, $2, $3, $4, $5)
+`
+
+type StoreResetPasswordTokenParams struct {
+	Jti       string    `json:"jti"`
+	UserID    uuid.UUID `json:"user_id"`
+	AppID     uuid.UUID `json:"app_id"`
+	Token     string    `json:"token"`
+	ExpiresAt time.Time `json:"expires_at"`
+}
+
+func (q *Queries) StoreResetPasswordToken(ctx context.Context, arg StoreResetPasswordTokenParams) error {
+	_, err := q.db.Exec(ctx, storeResetPasswordToken,
+		arg.Jti,
+		arg.UserID,
+		arg.AppID,
+		arg.Token,
+		arg.ExpiresAt,
 	)
 	return err
 }

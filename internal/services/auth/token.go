@@ -31,7 +31,7 @@ func (s *AuthService) RefreshToken(ctx context.Context, refreshTokenString strin
 		return nil, utils.ErrInternalServerError
 	}
 
-	if err := s.repo.RevokeRefreshToken(ctx, appID, userID, []string{jti}); err != nil {
+	if err := s.repo.RevokeRefreshToken(ctx, appID, userID); err != nil {
 		log.Error().Err(err).Str("jti", jti).Msg("Failed to revoke used refresh token")
 		return nil, utils.ErrInternalServerError
 	}
@@ -42,7 +42,7 @@ func (s *AuthService) RefreshToken(ctx context.Context, refreshTokenString strin
 		return nil, jwt.ErrTokenInvalidClaims
 	}
 
-	tokens, err := s.GenerateTokens(ctx, user)
+	tokens, err := s.GenerateUserAuthTokens(ctx, user)
 
 	newTokens := &models.RefreshTokenResponse{
 		AccessToken:  tokens.AccessToken,

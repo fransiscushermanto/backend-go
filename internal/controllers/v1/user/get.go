@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/fransiscushermanto/backend/internal/models"
+	"github.com/fransiscushermanto/backend/internal/services/user"
 	"github.com/fransiscushermanto/backend/internal/utils"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
@@ -84,7 +85,9 @@ func (c *Controller) GetUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := c.userService.GetUser(r.Context(), appID, userID)
+	user, err := c.userService.GetUser(r.Context(), appID, user.UserIdentifier{
+		ID: &userID,
+	})
 	if err != nil {
 		getUserLog.Error().Err(err).Msg("Service error getting user")
 		errConfig := models.ApiError{

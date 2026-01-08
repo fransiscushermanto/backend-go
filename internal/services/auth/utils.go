@@ -10,14 +10,15 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/fransiscushermanto/backend/internal/constants"
 	"github.com/fransiscushermanto/backend/internal/models"
 	"github.com/fransiscushermanto/backend/internal/utils"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 )
 
-func (s *AuthService) GenerateTokens(ctx context.Context, user *models.User) (*AuthTokens, error) {
-	log := log("generateTokens")
+func (s *AuthService) GenerateUserAuthTokens(ctx context.Context, user *models.User) (*AuthTokens, error) {
+	generateUserAuthTokensLog := log("GenerateUserAuthTokens")
 
 	accessTokenExpireTime := time.Now().Add(time.Minute * 30)     // 30 minutes
 	refreshTokenExpireTime := time.Now().Add(time.Hour * 24 * 30) // 30 days
@@ -31,10 +32,9 @@ func (s *AuthService) GenerateTokens(ctx context.Context, user *models.User) (*A
 		"exp":     refreshTokenExpireTime.Unix(),
 		"iat":     time.Now().Unix(),
 	}
-	refreshToken := jwt.NewWithClaims(jwt.SigningMethodES256, refreshTokenClaims)
-	refreshTokenString, err := refreshToken.SignedString(s.privateKey)
+	refreshToken, err := s.GenerateToken(constants.DEFAULT_JWT_SIGNING_METHOD, refreshTokenClaims)
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to sign refresh token")
+		generateUserAuthTokensLog.Error().Err(err).Msg("Failed to generate refresh token")
 		return nil, err
 	}
 
@@ -48,10 +48,9 @@ func (s *AuthService) GenerateTokens(ctx context.Context, user *models.User) (*A
 		"iat":         time.Now().Unix(),
 		"refresh_jti": refreshJTI,
 	}
-	accessToken := jwt.NewWithClaims(jwt.SigningMethodES256, accessTokenClaims)
-	accessTokenString, err := accessToken.SignedString(s.privateKey)
+	accessToken, err := s.GenerateToken(constants.DEFAULT_JWT_SIGNING_METHOD, accessTokenClaims)
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to sign access token")
+		generateUserAuthTokensLog.Error().Err(err).Msg("Failed to generate access token")
 		return &AuthTokens{
 			AccessToken:  "",
 			RefreshToken: "",
@@ -62,21 +61,32 @@ func (s *AuthService) GenerateTokens(ctx context.Context, user *models.User) (*A
 		JTI:       refreshJTI,
 		AppID:     user.AppID,
 		UserID:    user.ID,
-		Token:     hashToken(refreshTokenString),
+		Token:     hashToken(*refreshToken),
 		ExpiresAt: refreshTokenExpireTime,
 		CreatedAt: time.Now(),
 		IsActive:  true,
 	})
 
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to store refresh token")
+		generateUserAuthTokensLog.Error().Err(err).Msg("Failed to store refresh token")
 		return nil, err
 	}
 
 	return &AuthTokens{
-		AccessToken:  accessTokenString,
-		RefreshToken: refreshTokenString,
+		AccessToken:  *accessToken,
+		RefreshToken: *refreshToken,
 	}, nil
+}
+
+func (s *AuthService) GenerateToken(signingMethod jwt.SigningMethod, claims jwt.Claims) (*string, error) {
+	token := jwt.NewWithClaims(signingMethod, claims)
+	tokenString, err := token.SignedString(s.privateKey)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &tokenString, nil
 }
 
 func (s *AuthService) VerifyRefreshToken(ctx context.Context, token string) (*jwt.Token, error) {

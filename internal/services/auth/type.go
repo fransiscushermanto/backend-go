@@ -14,7 +14,9 @@ type AuthRepository interface {
 	StoreRefreshToken(ctx context.Context, token *models.RefreshToken) error
 	GetRefreshTokenByJTI(ctx context.Context, appID uuid.UUID, jti string) (*models.RefreshToken, error)
 	GetUserActiveRefreshTokens(ctx context.Context, appID uuid.UUID, userID *uuid.UUID, jti *string) (*[]models.RefreshToken, error)
-	RevokeRefreshToken(ctx context.Context, appID, userID uuid.UUID, jtis []string) error
+	RevokeRefreshToken(ctx context.Context, appID, userID uuid.UUID) error
+	StoreResetPasswordToken(ctx context.Context, token *models.ResetPasswordToken) error
+	RevokeResetPasswordToken(ctx context.Context, appID, userID uuid.UUID) error
 }
 
 type AuthService struct {

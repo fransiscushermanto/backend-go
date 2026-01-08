@@ -1,8 +1,8 @@
-build:
+build-go:
 	go build -o bin/backend-api ./cmd/api
 
 build-docker:
-	docker compose build
+	docker compose -f docker-compose.yaml -f docker-compose.dev.yaml build && docker image prune -f
 
 dev:
 	docker compose -f docker-compose.yaml -f docker-compose.dev.yaml $(action) $(if $(filter true,$(background)),-d,)  $*
@@ -17,7 +17,6 @@ seed:
 
 migrate:
 	docker compose -f "docker-compose.yaml" -f docker-compose.dev.yaml run \
-	--build \
 	--rm \
 	--entrypoint sh \
 	api /app/scripts/migrate.sh $(action) $(version) $*

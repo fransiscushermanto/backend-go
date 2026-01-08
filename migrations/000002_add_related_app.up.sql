@@ -1,5 +1,5 @@
 CREATE TABLE
-    IF NOT EXISTS core.apps (
+    core.apps (
         id UUID PRIMARY KEY,
         name BYTEA NOT NULL,
         created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,

@@ -1,5 +1,5 @@
 CREATE TABLE
-    IF NOT EXISTS core.users (
+    core.users (
         id UUID,
         app_id UUID REFERENCES core.apps (id) ON DELETE CASCADE,
         name VARCHAR(255) NOT NULL,

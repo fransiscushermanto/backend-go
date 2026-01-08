@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/fransiscushermanto/backend/internal/models"
+	"github.com/fransiscushermanto/backend/internal/services/user"
 	"github.com/fransiscushermanto/backend/internal/utils"
 )
 
@@ -22,7 +23,9 @@ func (c *Controller) Profile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := c.userService.GetUser(r.Context(), *appID, *userID)
+	user, err := c.userService.GetUser(r.Context(), *appID, user.UserIdentifier{
+		ID: userID,
+	})
 
 	if err != nil {
 		utils.Log().Error().Err(err).Msg("Service error getting user")

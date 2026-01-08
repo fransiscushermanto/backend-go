@@ -1,1 +1,1 @@
-DROP TABLE IF EXISTS core.apps;
+DROP TABLE core.apps;

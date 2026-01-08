@@ -71,6 +71,11 @@ case "$1" in
     echo "Checking migration status..."
     migrate -path "$MIGRATIONS_DIR" -database "$DATABASE_URL" status
     ;;
+  force)
+    echo "Forcing migrate"
+    migrate -path "$MIGRATIONS_DIR" -database "$DATABASE_URL" force "$2"
+    echo "Migration forcely moved to version $2"
+    ;;
   create)
     if [ -z "$2" ]; then
       echo "Usage: $0 create <name_of_migration>"

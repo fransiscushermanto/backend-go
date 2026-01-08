@@ -65,7 +65,7 @@ func (r *AuthRepository) GetRefreshTokenByJTI(ctx context.Context, appID uuid.UU
 		Token:     dbRefreshToken.Token,
 		ExpiresAt: dbRefreshToken.ExpiresAt,
 		IsActive:  dbRefreshToken.IsActive,
-		CreatedAt: dbRefreshToken.CreatedAt.Time,
+		CreatedAt: dbRefreshToken.CreatedAt,
 	}
 
 	log := authLog("GetRefreshTokenByJTI")
@@ -114,7 +114,7 @@ func (r *AuthRepository) GetUserActiveRefreshTokens(ctx context.Context, appID u
 			Token:     t.Token,
 			ExpiresAt: t.ExpiresAt,
 			IsActive:  t.IsActive,
-			CreatedAt: t.CreatedAt.Time,
+			CreatedAt: t.CreatedAt,
 		})
 	}
 
@@ -126,18 +126,48 @@ func (r *AuthRepository) GetUserActiveRefreshTokens(ctx context.Context, appID u
 	return &activeRefreshTokens, nil
 }
 
-func (r *AuthRepository) RevokeRefreshToken(ctx context.Context, appID, userID uuid.UUID, jtis []string) error {
-	if len(jtis) == 0 {
-		return nil
-	}
-
+func (r *AuthRepository) RevokeRefreshToken(ctx context.Context, appID, userID uuid.UUID) error {
 	err := r.queries.RevokeRefreshTokens(ctx, db.RevokeRefreshTokensParams{
 		AppID:  appID,
 		UserID: userID,
-		Jtis:   jtis,
 	})
 
 	if err != nil {
+		return fmt.Errorf("failed to revoke tokens: %w", err)
+	}
+
+	return nil
+}
+
+func (r *AuthRepository) StoreResetPasswordToken(ctx context.Context, token *models.ResetPasswordToken) error {
+	log := authLog("StoreResetPasswordToken")
+
+	err := r.queries.StoreResetPasswordToken(ctx, db.StoreResetPasswordTokenParams{
+		Jti:       token.JTI,
+		UserID:    token.UserID,
+		AppID:     token.AppID,
+		Token:     token.Token,
+		ExpiresAt: token.ExpiresAt,
+	})
+
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to insert reset password token into DB")
+		return fmt.Errorf("failed to insert reset password token: %w", err)
+	}
+
+	return nil
+}
+
+func (r *AuthRepository) RevokeResetPasswordToken(ctx context.Context, appID, userID uuid.UUID) error {
+	log := authLog("RevokeResetPasswordToken")
+
+	err := r.queries.RevokeResetPasswordToken(ctx, db.RevokeResetPasswordTokenParams{
+		AppID:  appID,
+		UserID: userID,
+	})
+
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to revoke reset password token from DB")
 		return fmt.Errorf("failed to revoke tokens: %w", err)
 	}
 

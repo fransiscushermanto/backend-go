@@ -29,7 +29,7 @@ func (c *Controller) Register(w http.ResponseWriter, r *http.Request) {
 	appID, err := uuid.Parse(params.AppID)
 
 	if err != nil {
-		registerLog.Error().Msg("Missing or Invalid app_id")
+		registerLog.Error().Err(err).Msg("Missing or Invalid app_id")
 		utils.RespondWithError(w, models.ApiError{
 			StatusCode: http.StatusNotFound,
 			Message:    utils.StringPointer("app_id not found"),
@@ -71,10 +71,10 @@ func (c *Controller) Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		registerLog.Error().Err(err).Msg("Invalid Payload Request")
+		registerLog.Error().Err(err).Msg("Invalid JSON")
 		utils.RespondWithError(w, models.ApiError{
 			StatusCode: http.StatusBadRequest,
-			Message:    utils.StringPointer("Invalid request payload"),
+			Message:    utils.StringPointer("Invalid Payload Request"),
 		})
 		return
 	}
@@ -84,6 +84,15 @@ func (c *Controller) Register(w http.ResponseWriter, r *http.Request) {
 		registerLog.Error().Str("provider", string(req.Provider)).Msg("Accessing not implemented provider")
 		utils.RespondWithError(w, models.ApiError{
 			StatusCode: http.StatusNotImplemented,
+		})
+		return
+	}
+
+	if err := utils.ValidateBodyRequest(req); err != nil {
+		registerLog.Error().Err(err).Msg("Invalid Payload Request")
+		utils.RespondWithError(w, models.ApiError{
+			StatusCode: http.StatusBadRequest,
+			Message:    utils.StringPointer("Invalid Payload Request"),
 		})
 		return
 	}
